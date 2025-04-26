@@ -16,6 +16,7 @@ def main():
     print("request split",request.split("\r\n"))
     headerInfoValue = request.split("\r\n")[2].split(": ")
     url_path = request.split(" ")[1]
+    print("headerInfoValue",headerInfoValue)
     # if url_path.startswith("/echo/"):
     #     endpoint = url_path.split("/")[2]
     #     print("endpoint",endpoint)
