@@ -20,6 +20,8 @@ def main():
         print("endpoint",endpoint)
         _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
         response =  _response.encode('utf-8')
+    elif url_path == "/":
+        response = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n"
     else:
         response = b"HTTP/1.1 404 Not Found\r\n\r\n"
         
