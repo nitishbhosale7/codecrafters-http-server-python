@@ -26,18 +26,17 @@ def handle_api_request(request):
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
-    server_socket = socket.create_server(("localhost", 4221), reuse_port=False)
-    conn,addr = server_socket.accept()
-    print(f"Connection from {addr} has been established!");
-    print("conn",conn)
-    request = conn.recv(1024).decode('utf-8')
-    response = handle_api_request(request)
+    with socket.create_server(("localhost", 4221), reuse_port=False) as server_socket:
+        print("Server started on port 4221")
+        print("Listening for connections...")
+        while True:
+            conn, addr = server_socket.accept()
+            print(f"Connection from {addr} has been established!");
+            print("conn",conn)
+            request = conn.recv(1024).decode('utf-8')
+            response = handle_api_request(request)
+            conn.sendall(response)
     
-
-    
-            
-    conn.sendall(response)
-    conn.close()
     
 
 
