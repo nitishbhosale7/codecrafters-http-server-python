@@ -14,7 +14,7 @@ def main():
     request = conn.recv(1024).decode('utf-8')
     print("request",request)
     print("request split",request.split(" "))
-    url_path = request.split(" ")[1]
+    url_path = request.split(" ")[2]
     if url_path.startswith("/echo/"):
         endpoint = url_path.split("/")
         print("endpoint",endpoint)
