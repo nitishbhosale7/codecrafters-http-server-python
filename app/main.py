@@ -16,7 +16,7 @@ def main():
     print("request split",request.split(" "))
     url_path = request.split(" ")[1]
     if url_path :
-        endpoint = url_path.split("/")[1]
+        endpoint = url_path.split("/")
         print("endpoint",endpoint)
         _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
         response =  _response.encode('utf-8')
