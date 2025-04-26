@@ -11,7 +11,7 @@ def main():
     conn,addr = server_socket.accept()
     print(f"Connection from {addr} has been established!");
     print("conn",conn)
-    request = conn.recv(1024).decode('utf-8')
+    request = conn.recv(1024)
     print("Received request:",request)
     
 
