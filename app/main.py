@@ -10,6 +10,7 @@ def main():
     server_socket = socket.create_server(("localhost", 4221), reuse_port=True)
     conn,addr = server_socket.accept()
     print(f"Connection from {addr} has been established!");
+    print("conn",conn)
     
 
 
