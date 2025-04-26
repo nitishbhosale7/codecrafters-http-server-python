@@ -11,8 +11,15 @@ def main():
     conn,addr = server_socket.accept()
     print(f"Connection from {addr} has been established!");
     print("conn",conn)
-    request = conn.recv(1024)
-    print("Received request:",request)
+    request = conn.recv(1024).decode('utf-8')
+    url_path = request.split(" ")[1]
+    if url_path == "/":
+        response = b"HTTP/1.1 200 OK\r\n\r\n"
+    else:
+        response = b"HTTP/1.1 404 Not Found\r\n\r\n"
+        
+    conn.sendall(response)
+    conn.close()
     
 
 
