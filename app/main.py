@@ -14,7 +14,9 @@ def main():
     request = conn.recv(1024).decode('utf-8')
     url_path = request.split(" ")[1]
     if url_path == "/":
-        response = b"HTTP/1.1 200 OK\r\n\r\n"
+        endpoint = url_path.split("/")[1]
+        _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
+        response =  endpoint.encode('utf-8')
     else:
         response = b"HTTP/1.1 404 Not Found\r\n\r\n"
         
