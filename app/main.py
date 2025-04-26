@@ -1,4 +1,17 @@
 import socket  # noqa: F401
+import threading
+
+
+
+def client_thread(conn, addr):
+    print(f"Connection from {addr} has been established!")
+    request = conn.recv(1024).decode('utf-8')
+    print("request",request)
+    response = handle_api_request(request)
+    conn.sendall(response)
+    
+
+    
 
 
 def handle_api_request(request):
@@ -31,11 +44,10 @@ def main():
         print("Listening for connections...")
         while True:
             conn, addr = server_socket.accept()
-            print(f"Connection from {addr} has been established!");
-            print("conn",conn)
-            request = conn.recv(1024).decode('utf-8')
-            response = handle_api_request(request)
-            conn.sendall(response)
+            thread = threading.Thread(target=client_thread, args=(conn, addr))
+            thread.start()
+            print(f"Active connections: {threading.activeCount() - 1}")
+            
     
     
 
