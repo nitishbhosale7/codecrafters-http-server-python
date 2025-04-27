@@ -8,8 +8,8 @@ import sys
 
 def client_thread(conn, addr):
     print(f"Connection from {addr} has been established!")
-    request = conn.recv(1024)
-    # request = conn.recv(1024).decode('utf-8')
+    # request = conn.recv(1024)
+    request = conn.recv(1024).decode('utf-8')
     print("request",request)
     response = handle_api_request(request)
     conn.sendall(response)
