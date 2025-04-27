@@ -47,32 +47,19 @@ def handle_api_request(request):
     
 
 def main():
+        # You can use print statements as follows for debugging, they'll be visible when running tests.
+        print("Logs from your program will appear here!")
     
-        try:
-            # You can use print statements as follows for debugging, they'll be visible when running tests.
-            print("Logs from your program will appear here!")
-        
-            with socket.create_server(("localhost", 4221), reuse_port=False) as server_socket:
-                print("Server started on port 4221")
-                print("Listening for connections...")
-                while True:
-                    conn, addr = server_socket.accept()
-                    try:
-                        print(f"Connection from {addr} has been established!")
-                        thread = threading.Thread(target=client_thread, args=(conn, addr))
-                        thread.start()
-                        print(f"Active connections: {threading.activeCount() - 1}")
-                    
-                    
-                    except KeyboardInterrupt:
-                        print("\nServer stopped by user.")
-                        conn.close()
-                        
-        except KeyboardInterrupt:
-                        print("\nServer stopped by user.")
-                        return -1;
-        
-            
+        with socket.create_server(("localhost", 4221), reuse_port=False) as server_socket:
+            print("Server started on port 4221")
+            print("Listening for connections...")
+            while True:
+                conn, addr = server_socket.accept()
+                print(f"Connection from {addr} has been established!")
+                thread = threading.Thread(target=client_thread, args=(conn, addr))
+                thread.start()
+                print(f"Active connections: {threading.activeCount() - 1}")
+
     
     
 
