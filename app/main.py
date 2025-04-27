@@ -33,10 +33,10 @@ def handle_api_request(request):
     url_path = request.split(" ")[1]
     if url_path.startswith("/echo/"):
         endpoint = url_path.split("/")[2]
-        accept_encoding = extract_header_value(request, "Accept-Encoding")
-        print("accept_encoding", accept_encoding)
+        accept_encoding = extract_header_value(request, "Accept-Encoding").split(",")
+        
         print("endpoint", endpoint)
-        _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain{'\r\nContent-Encoding: ' + accept_encoding if accept_encoding == 'gzip' else ''}\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
+        _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain{'\r\nContent-Encoding: ' + accept_encoding if accept_encoding.index('gzip') > 1  else ''}\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
         response = _response.encode('utf-8')
     elif url_path.startswith("/user-agent"):
         headerInfoValue = extract_header_value(request, "User-Agent")
