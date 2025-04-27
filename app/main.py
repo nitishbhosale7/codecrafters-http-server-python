@@ -33,7 +33,7 @@ def handle_api_request(request):
     url_path = request.split(" ")[1]
     if url_path.startswith("/echo/"):
         endpoint = url_path.split("/")[2]
-        accept_encoding = extract_header_value(request, "Accept-Encoding").split(",")
+        accept_encoding = extract_header_value(request, "Accept-Encoding").split(",") if extract_header_value(request, "Accept-Encoding") else None
         print("accept_encoding", accept_encoding)
         print("endpoint", endpoint)
         _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain{'\r\nContent-Encoding: ' + 'gzip' if  (' gzip' in accept_encoding or 'gzip' in accept_encoding)  else ''}\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
