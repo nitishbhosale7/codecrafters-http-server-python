@@ -48,7 +48,6 @@ def handle_api_request(request):
             requestBody = request.split("\r\n\r\n")[1]
             print("requestBody",requestBody)
             if os.path.exists(directory):
-                os.makedirs(directory)
                 with open(os.path.join(directory, file_name), 'wb') as f:
                     f.write(requestBody.encode())
                     response = b"HTTP/1.1 200 OK\r\n\r\n"
