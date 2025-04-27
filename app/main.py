@@ -21,6 +21,7 @@ def client_thread(conn, addr):
 def handle_api_request(request):
     print("request",request)
     print("request split",request.split("\r\n"))
+    print("arguments",sys.argv)
     url_path = request.split(" ")[1]
     if url_path.startswith("/echo/"):
         endpoint = url_path.split("/")[2]
