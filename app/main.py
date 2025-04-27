@@ -1,6 +1,7 @@
 import socket  # noqa: F401
 import threading
 import sys
+import os
 
 
 
@@ -34,10 +35,19 @@ def handle_api_request(request):
         _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(headerInfoValue)}\r\n\r\n{headerInfoValue}"
         response =  _response.encode('utf-8')
     elif url_path.startswith("/files/"):
-        directory = sys.argv
-        print("directory",directory)
+        directory = None
+        if len(sys.argv) > 1:
+            directory = sys.argv[2]
         file_name = url_path.split("/")[2]
         print("file_name",file_name)
+        
+        if os.path.isfile(os.path.join(directory, file_name)):
+            with open(os.path.join(directory, file_name), 'rb') as f:
+                file_content = f.read()
+                response = b"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + str(len(file_content)).encode() + b"\r\n\r\n" + file_content
+        
+        else:
+            response = b"HTTP/1.1 404 Not Found\r\n\r\n"
         
     elif url_path == "/":
         response = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n"
