@@ -41,13 +41,20 @@ def handle_api_request(request):
         file_name = url_path.split("/")[2]
         print("file_name",file_name)
         
-        if os.path.isfile(os.path.join(directory, file_name)):
-            with open(os.path.join(directory, file_name), 'rb') as f:
-                file_content = f.read()
-                response = b"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + str(len(file_content)).encode() + b"\r\n\r\n" + file_content
+        httpMethod = request.split(" ")[0]
+        print("httpMethod",httpMethod)
         
-        else:
-            response = b"HTTP/1.1 404 Not Found\r\n\r\n"
+        if httpMethod == "POST":
+            requestBody = request.split("\r\n\r\n")
+            print("requestBody",requestBody)
+        elif httpMethod == "GET":
+            if os.path.isfile(os.path.join(directory, file_name)):
+                with open(os.path.join(directory, file_name), 'rb') as f:
+                    file_content = f.read()
+                    response = b"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + str(len(file_content)).encode() + b"\r\n\r\n" + file_content
+        
+            else:
+                response = b"HTTP/1.1 404 Not Found\r\n\r\n"
         
     elif url_path == "/":
         response = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n"
