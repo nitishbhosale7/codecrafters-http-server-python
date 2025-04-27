@@ -70,7 +70,7 @@ def main():
                         
         except KeyboardInterrupt:
                         print("\nServer stopped by user.")
-                        conn.close()
+                        return -1;
         
             
     
