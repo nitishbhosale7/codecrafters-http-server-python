@@ -47,7 +47,7 @@ def handle_api_request(request):
         if httpMethod == "POST":
             requestBody = request.split("\r\n\r\n")[1]
             print("requestBody",requestBody)
-            if not os.path.exists(directory):
+            if os.path.exists(directory):
                 os.makedirs(directory)
                 with open(os.path.join(directory, file_name), 'wb') as f:
                     f.write(requestBody.encode())
