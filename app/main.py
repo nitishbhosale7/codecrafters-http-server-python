@@ -2,6 +2,9 @@ import socket  # noqa: F401
 import threading
 import sys
 import os
+import gzip
+
+
 
 
 def client_thread(conn, addr):
