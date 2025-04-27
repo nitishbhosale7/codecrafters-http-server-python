@@ -50,7 +50,7 @@ def handle_api_request(request):
             if os.path.exists(directory):
                 with open(os.path.join(directory, file_name), 'wb') as f:
                     f.write(requestBody.encode())
-                    response = b"HTTP/1.1 201 OK\r\n\r\n"
+                    response = b"HTTP/1.1 201 Created\r\n\r\n"
             else:
                 response = b"HTTP/1.1 415 Unsupported Media Type\r\n\r\n"
             
