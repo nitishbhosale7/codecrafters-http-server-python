@@ -45,8 +45,20 @@ def handle_api_request(request):
         print("httpMethod",httpMethod)
         
         if httpMethod == "POST":
-            requestBody = request.split("\r\n\r\n")
+            requestBody = request.split("\r\n\r\n")[1]
             print("requestBody",requestBody)
+            content_type = request.split("\r\n")[4].split(": ")[1]
+            print("content_type",content_type)
+            content_length = int(request.split("\r\n")[5].split(": ")[1])
+            if content_type == "application/octet-stream" and content_length == len(requestBody):
+                if not os.path.exists(directory):
+                    os.makedirs(directory)
+                with open(os.path.join(directory, file_name), 'wb') as f:
+                    f.write(requestBody.encode())
+                    response = b"HTTP/1.1 200 OK\r\n\r\n"
+            else:
+                response = b"HTTP/1.1 415 Unsupported Media Type\r\n\r\n"
+            
         elif httpMethod == "GET":
             if os.path.isfile(os.path.join(directory, file_name)):
                 with open(os.path.join(directory, file_name), 'rb') as f:
