@@ -40,7 +40,11 @@ def handle_api_request(request):
         print("accept_encoding", accept_encoding)
         print("endpoint", endpoint)
         if accept_encoding:
-            _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain{'\r\nContent-Encoding: ' + 'gzip' if  (' gzip' in accept_encoding or 'gzip' in accept_encoding)  else ''}\r\nContent-Length:{len(endpoint)}\r\n\r\n{gzip.compress(endpoint.encode('utf-8'))}"
+            if 'gzip' in accept_encoding or ' gzip' in accept_encoding:
+                compressed_data = gzip.compress(endpoint.encode('utf-8'))
+                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {len(compressed_data)}\r\n\r\n" + compressed_data
+            else:
+                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(endpoint)}\r\n\r\n{endpoint}"
         else:
             _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
         response = _response.encode('utf-8')
