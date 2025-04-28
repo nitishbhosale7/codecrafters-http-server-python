@@ -45,6 +45,7 @@ class HTTPServer:
                         break
                     if self.extract_header_value(request, "Connection") == "close":
                         conn.sendall(self.http_response(200, "OK", "close", is_connection_close=True))
+                        conn.close()
                         break
                     print("Request received:", request)
                     response = self.handle_api_request(request)
