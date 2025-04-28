@@ -32,6 +32,7 @@ class HTTPServer:
 
     def handle_client(self, conn, addr):
         """Handle a single client connection."""
+
         try:
             request = conn.recv(1024).decode('utf-8')
             print("Request received:", request)
@@ -41,6 +42,9 @@ class HTTPServer:
                 try:
                     request = conn.recv(1024).decode('utf-8')
                     if not request.strip():
+                        break
+                    if self.extract_header_value(request, "Connection") == "close":
+                        conn.sendall(self.http_response(200, "OK", "", is_connection_close=True))
                         break
                     print("Request received:", request)
                     response = self.handle_api_request(request)
@@ -116,7 +120,7 @@ class HTTPServer:
                 return value
         return None
 
-    def http_response(self, status_code, status_message, body, content_type="text/plain", content_encoding=None):
+    def http_response(self, status_code, status_message, body, is_connection_close=False, content_type="text/plain", content_encoding=None):
         """Generate an HTTP response."""
         headers = [
             f"HTTP/1.1 {status_code} {status_message}",
@@ -125,6 +129,8 @@ class HTTPServer:
         ]
         if content_encoding:
             headers.append(f"Content-Encoding: {content_encoding}")
+        if is_connection_close:
+            headers.append("Connection: close")
         headers.append("\r\n")
         response = "\r\n".join(headers).encode('utf-8')
         if isinstance(body, str):
@@ -132,6 +138,9 @@ class HTTPServer:
         else:
             response += body
         return response
+    
+    
+
 
 
 
