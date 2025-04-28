@@ -3,7 +3,6 @@ import threading
 import sys
 import os
 import gzip
-import signal
 
 
 
@@ -90,36 +89,20 @@ def handle_api_request(request):
         
     return response
 
-def signal_handler(sig, frame):
-    """Handle SIGINT (Ctrl + C) to gracefully stop the server."""
-    global server_socket
-    print("\nShutting down the server...")
-    if server_socket:
-        server_socket.close()
-    sys.exit(0)
-
 
 def main():
-    global server_socket
-
-    # Register the signal handler for SIGINT
-    signal.signal(signal.SIGINT, signal_handler)
-
+    # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
     
     with socket.create_server(("localhost", 4221), reuse_port=False) as server_socket:
         print("Server started on port 4221")
         print("Listening for connections...")
         while True:
-            try:
-                conn, addr = server_socket.accept()
-                print(f"Connection from {addr} has been established!")
-                thread = threading.Thread(target=client_thread, args=(conn, addr))
-                thread.start()
-                print(f"Active connections: {threading.activeCount() - 1}")
-            except OSError:
-                # Break the loop if the server socket is closed
-                break
+            conn, addr = server_socket.accept()
+            print(f"Connection from {addr} has been established!")
+            thread = threading.Thread(target=client_thread, args=(conn, addr))
+            thread.start()
+            print(f"Active connections: {threading.activeCount() - 1}")
 
 
 if __name__ == "__main__":
