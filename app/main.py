@@ -3,6 +3,7 @@ import threading
 import sys
 import os
 import gzip
+import signal
 
 
 
@@ -42,7 +43,7 @@ def handle_api_request(request):
         if accept_encoding:
             if 'gzip' in accept_encoding or ' gzip' in accept_encoding:
                 compressed_data = gzip.compress(endpoint.encode('utf-8'))
-                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {len(compressed_data)}\r\n\r\n" + compressed_data.decode('utf-8')
+                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {len(compressed_data)}\r\n\r\n" + compressed_data
             else:
                 _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(endpoint)}\r\n\r\n{endpoint}"
         else:
@@ -89,20 +90,36 @@ def handle_api_request(request):
         
     return response
 
+def signal_handler(sig, frame):
+    """Handle SIGINT (Ctrl + C) to gracefully stop the server."""
+    global server_socket
+    print("\nShutting down the server...")
+    if server_socket:
+        server_socket.close()
+    sys.exit(0)
+
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
+    global server_socket
+
+    # Register the signal handler for SIGINT
+    signal.signal(signal.SIGINT, signal_handler)
+
     print("Logs from your program will appear here!")
     
     with socket.create_server(("localhost", 4221), reuse_port=False) as server_socket:
         print("Server started on port 4221")
         print("Listening for connections...")
         while True:
-            conn, addr = server_socket.accept()
-            print(f"Connection from {addr} has been established!")
-            thread = threading.Thread(target=client_thread, args=(conn, addr))
-            thread.start()
-            print(f"Active connections: {threading.activeCount() - 1}")
+            try:
+                conn, addr = server_socket.accept()
+                print(f"Connection from {addr} has been established!")
+                thread = threading.Thread(target=client_thread, args=(conn, addr))
+                thread.start()
+                print(f"Active connections: {threading.activeCount() - 1}")
+            except OSError:
+                # Break the loop if the server socket is closed
+                break
 
 
 if __name__ == "__main__":
