@@ -1,111 +1,152 @@
-import socket  # noqa: F401
+import socket
 import threading
 import sys
 import os
 import gzip
+import signal
 
 
+class HTTPServer:
+    def __init__(self, host="localhost", port=4221):
+        self.host = host
+        self.port = port
+        self.server_socket = None
+        self.is_running = True
 
+    def start(self):
+        """Start the HTTP server."""
+        self.server_socket = socket.create_server((self.host, self.port), reuse_port=False)
+        print(f"Server started on {self.host}:{self.port}")
+        print("Listening for connections...")
 
-def client_thread(conn, addr):
-    print(f"Connection from {addr} has been established!")
-    request = conn.recv(1024).decode('utf-8')
-    print("request", request)
-    response = handle_api_request(request)
-    conn.sendall(response)
+        while self.is_running:
+            try:
+                conn, addr = self.server_socket.accept()
+                print(f"Connection from {addr} has been established!")
+                thread = threading.Thread(target=self.handle_client, args=(conn, addr))
+                thread.start()
+                print(f"Active connections: {threading.activeCount() - 1}")
+            except OSError:
+                # Break the loop if the server socket is closed
+                break
 
+    def stop(self):
+        """Stop the HTTP server."""
+        print("\nShutting down the server...")
+        self.is_running = False
+        if self.server_socket:
+            self.server_socket.close()
 
-def extract_header_value(request, header_name):
-    # Split the request into lines
-    lines = request.split("\r\n")
-    
-    # Iterate through the lines to find the header
-    for line in lines:
-        if line.startswith(header_name):
-            # Split the line into key and value
-            _, value = line.split(": ", 1)
-            return value
-    
-    return None
+    def handle_client(self, conn, addr):
+        """Handle a single client connection."""
+        try:
+            request = conn.recv(1024).decode('utf-8')
+            print("Request received:", request)
+            response = self.handle_api_request(request)
+            conn.sendall(response)
+        finally:
+            conn.close()
 
+    def handle_api_request(self, request):
+        """Process the HTTP request and generate a response."""
+        try:
+            url_path = request.split(" ")[1]
+            if url_path.startswith("/echo/"):
+                return self.handle_echo(request, url_path)
+            elif url_path.startswith("/user-agent"):
+                return self.handle_user_agent(request)
+            elif url_path.startswith("/files/"):
+                return self.handle_file_operations(request, url_path)
+            elif url_path == "/":
+                return self.http_response(200, "OK", "")
+            else:
+                return self.http_response(404, "Not Found", "")
+        except Exception as e:
+            print("Error handling request:", e)
+            return self.http_response(500, "Internal Server Error", "An error occurred.")
 
-def handle_api_request(request):
-    print("request", request)
-    print("request split", request.split("\r\n"))
-    print("arguments", sys.argv)
-    url_path = request.split(" ")[1]
-    if url_path.startswith("/echo/"):
+    def handle_echo(self, request, url_path):
+        """Handle the /echo/ endpoint."""
         endpoint = url_path.split("/")[2]
-        accept_encoding = extract_header_value(request, "Accept-Encoding").split(",") if extract_header_value(request, "Accept-Encoding") else None
-        print("accept_encoding", accept_encoding)
-        print("endpoint", endpoint)
-        if accept_encoding:
-            if 'gzip' in accept_encoding or ' gzip' in accept_encoding:
-                compressed_data = gzip.compress(endpoint.encode('utf-8'))
-                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {len(compressed_data)}\r\n\r\n" 
-                response = _response.encode('utf-8') + compressed_data
-                print("compressed_data", compressed_data)
-            else:
-                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(endpoint)}\r\n\r\n{endpoint}"
-                response = _response.encode('utf-8')
+        accept_encoding = self.extract_header_value(request, "Accept-Encoding")
+        if accept_encoding and ('gzip' in accept_encoding or ' gzip' in accept_encoding):
+            compressed_data = gzip.compress(endpoint.encode('utf-8'))
+            return self.http_response(200, "OK", compressed_data, content_encoding="gzip")
         else:
-            _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
-            response = _response.encode('utf-8')
-    elif url_path.startswith("/user-agent"):
-        headerInfoValue = extract_header_value(request, "User-Agent")
-        print("headerInfoValue", headerInfoValue)
-        _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(headerInfoValue)}\r\n\r\n{headerInfoValue}"
-        response = _response.encode('utf-8')
-    elif url_path.startswith("/files/"):
-        directory = None
-        if len(sys.argv) > 1:
-            directory = sys.argv[2]
+            return self.http_response(200, "OK", endpoint)
+
+    def handle_user_agent(self, request):
+        """Handle the /user-agent endpoint."""
+        user_agent = self.extract_header_value(request, "User-Agent")
+        return self.http_response(200, "OK", user_agent)
+
+    def handle_file_operations(self, request, url_path):
+        """Handle file-related operations."""
+        directory = sys.argv[2] if len(sys.argv) > 1 else None
         file_name = url_path.split("/")[2]
-        print("file_name", file_name)
-        
-        httpMethod = request.split(" ")[0]
-        print("httpMethod", httpMethod)
-        
-        if httpMethod == "POST":
-            requestBody = request.split("\r\n\r\n")[1]
-            print("requestBody", requestBody)
-            if os.path.exists(directory):
+        http_method = request.split(" ")[0]
+
+        if http_method == "POST":
+            request_body = request.split("\r\n\r\n")[1]
+            if directory and os.path.exists(directory):
                 with open(os.path.join(directory, file_name), 'wb') as f:
-                    f.write(requestBody.encode())
-                    response = b"HTTP/1.1 201 Created\r\n\r\n"
+                    f.write(request_body.encode())
+                return self.http_response(201, "Created", "")
             else:
-                response = b"HTTP/1.1 415 Unsupported Media Type\r\n\r\n"
-            
-        elif httpMethod == "GET":
-            if os.path.isfile(os.path.join(directory, file_name)):
+                return self.http_response(415, "Unsupported Media Type", "")
+        elif http_method == "GET":
+            if directory and os.path.isfile(os.path.join(directory, file_name)):
                 with open(os.path.join(directory, file_name), 'rb') as f:
                     file_content = f.read()
-                    response = b"HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: " + str(len(file_content)).encode() + b"\r\n\r\n" + file_content
-        
+                return self.http_response(200, "OK", file_content, content_type="application/octet-stream")
             else:
-                response = b"HTTP/1.1 404 Not Found\r\n\r\n"
-        
-    elif url_path == "/":
-        response = b"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 0\r\n\r\n"
-    else:
-        response = b"HTTP/1.1 404 Not Found\r\n\r\n"
-        
-    return response
+                return self.http_response(404, "Not Found", "")
+        else:
+            return self.http_response(405, "Method Not Allowed", "")
+
+    def extract_header_value(self, request, header_name):
+        """Extract the value of a specific header from the HTTP request."""
+        lines = request.split("\r\n")
+        for line in lines:
+            if line.startswith(header_name):
+                _, value = line.split(": ", 1)
+                return value
+        return None
+
+    def http_response(self, status_code, status_message, body, content_type="text/plain", content_encoding=None):
+        """Generate an HTTP response."""
+        headers = [
+            f"HTTP/1.1 {status_code} {status_message}",
+            f"Content-Type: {content_type}",
+            f"Content-Length: {len(body)}"
+        ]
+        if content_encoding:
+            headers.append(f"Content-Encoding: {content_encoding}")
+        headers.append("\r\n")
+        response = "\r\n".join(headers).encode('utf-8')
+        if isinstance(body, str):
+            response += body.encode('utf-8')
+        else:
+            response += body
+        return response
+
+
+def signal_handler(server):
+    """Handle SIGINT (Ctrl + C) to gracefully stop the server."""
+    def handler(sig, frame):
+        server.stop()
+        sys.exit(0)
+    return handler
 
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
-    
-    with socket.create_server(("localhost", 4221), reuse_port=False) as server_socket:
-        print("Server started on port 4221")
-        print("Listening for connections...")
-        while True:
-            conn, addr = server_socket.accept()
-            print(f"Connection from {addr} has been established!")
-            thread = threading.Thread(target=client_thread, args=(conn, addr))
-            thread.start()
-            print(f"Active connections: {threading.activeCount() - 1}")
+    server = HTTPServer()
+
+    # Register the signal handler for SIGINT
+    signal.signal(signal.SIGINT, signal_handler(server))
+
+    # Start the server
+    server.start()
 
 
 if __name__ == "__main__":
