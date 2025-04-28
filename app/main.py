@@ -3,7 +3,7 @@ import threading
 import sys
 import os
 import gzip
-import signal
+
 
 
 class HTTPServer:
@@ -30,13 +30,6 @@ class HTTPServer:
                 # Break the loop if the server socket is closed
                 break
 
-    def stop(self):
-        """Stop the HTTP server."""
-        print("\nShutting down the server...")
-        self.is_running = False
-        if self.server_socket:
-            self.server_socket.close()
-
     def handle_client(self, conn, addr):
         """Handle a single client connection."""
         try:
@@ -44,8 +37,8 @@ class HTTPServer:
             print("Request received:", request)
             response = self.handle_api_request(request)
             conn.sendall(response)
-        finally:
-            conn.close()
+        except Exception as e:
+            print("Error handling client:", e)
 
     def handle_api_request(self, request):
         """Process the HTTP request and generate a response."""
@@ -131,19 +124,12 @@ class HTTPServer:
         return response
 
 
-def signal_handler(server):
-    """Handle SIGINT (Ctrl + C) to gracefully stop the server."""
-    def handler(sig, frame):
-        server.stop()
-        sys.exit(0)
-    return handler
+
 
 
 def main():
     server = HTTPServer()
 
-    # Register the signal handler for SIGINT
-    signal.signal(signal.SIGINT, signal_handler(server))
 
     # Start the server
     server.start()
