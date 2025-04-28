@@ -1,6 +1,6 @@
 [![progress-banner](https://backend.codecrafters.io/progress/http-server/8bb79597-cc3b-4dfb-9b79-b8f059fc808d)](https://app.codecrafters.io/users/codecrafters-bot?r=2qF)
 
-This is a starting point for Python solutions to the
+This is a Python solutions to the
 ["Build Your Own HTTP server" Challenge](https://app.codecrafters.io/courses/http-server/overview).
 
 [HTTP](https://en.wikipedia.org/wiki/Hypertext_Transfer_Protocol) is the
