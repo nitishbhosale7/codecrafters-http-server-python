@@ -36,7 +36,17 @@ class HTTPServer:
             request = conn.recv(1024).decode('utf-8')
             print("Request received:", request)
             response = self.handle_api_request(request)
-            conn.sendall(response)
+            while True:
+                conn.sendall(response)
+                try:
+                    request = conn.recv(1024).decode('utf-8')
+                    if not request.strip():
+                        break
+                    print("Request received:", request)
+                    response = self.handle_api_request(request)
+                except Exception as e:
+                    print("Error handling client:", e)
+                    break
         except Exception as e:
             print("Error handling client:", e)
 
