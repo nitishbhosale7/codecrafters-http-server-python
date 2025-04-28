@@ -42,12 +42,15 @@ def handle_api_request(request):
         if accept_encoding:
             if 'gzip' in accept_encoding or ' gzip' in accept_encoding:
                 compressed_data = gzip.compress(endpoint.encode('utf-8'))
-                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {len(compressed_data)}\r\n\r\n" + compressed_data
+                _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Encoding: gzip\r\nContent-Length: {len(compressed_data)}\r\n\r\n" 
+                response = _response.encode('utf-8') + compressed_data
+                print("compressed_data", compressed_data)
             else:
                 _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {len(endpoint)}\r\n\r\n{endpoint}"
+                response = _response.encode('utf-8')
         else:
             _response = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length:{len(endpoint)}\r\n\r\n{endpoint}"
-        response = _response.encode('utf-8')
+            response = _response.encode('utf-8')
     elif url_path.startswith("/user-agent"):
         headerInfoValue = extract_header_value(request, "User-Agent")
         print("headerInfoValue", headerInfoValue)
